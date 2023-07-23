@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chat en temps réel</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <h1>Chat en temps réel</h1>
+  <div id="chat-container">
+    <ul id="messages"></ul>
+<form action="">
+  <input id="username" placeholder="Votre nom" autocomplete="off" />
+  <input id="message" placeholder="Votre Message" autocomplete="off" /><button>Envoyer</button>
+</form>
+<br>
+<button id="startVideo">Démarrer la vidéo</button> <button id="startAudio">Démarrer l'audio</button>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+  let username = '';
+
+  // Fonction pour ajouter un message à la liste
+  function addMessage(username, message, color, type) {
+    const messages = document.getElementById('messages');
+    const li = document.createElement('li');
+    li.textContent = username + ': ' + message;
+    li.classList.add('message', type);
+    li.style.backgroundColor = color; // Définir la couleur de fond du message
+    messages.appendChild(li);
+  }
+
+  // Gérer l'envoi de messages
+  document.querySelector('form').addEventListener('submit', (event) => {
+    event.preventDefault();
+    const inputUsername = document.getElementById('username');
+    const inputMessage = document.getElementById('message');
+    username = inputUsername.value;
+    const message = inputMessage.value;
+    inputMessage.value = '';
+
+    // Envoi du message au serveur pour le diffuser aux autres utilisateurs
+    socket.emit('chat message', { username, message });
+  });
+
+  // Gérer la réception de l'historique des messages lorsqu'un nouvel utilisateur se connecte
+  socket.on('chat history', (history) => {
+    history.forEach((message) => {
+      addMessage(message.username, message.message, message.color, message.username === username ? 'me' : 'other');
+    });
+  });
+
+  // Gérer la réception des messages en temps réel
+  socket.on('chat message', (data) => {
+    addMessage(data.username, data.message, data.color, data.username === username ? 'me' : 'other');
+  });
+
+      // Démarrer la vidéo
+      document.getElementById('startVideo').addEventListener('click', () => {
+      startVideoCall();
+    });
+
+    // Démarrer l'audio
+    document.getElementById('startAudio').addEventListener('click', () => {
+      startAudioCall();
+    });
+
+    // Fonction pour démarrer l'appel vidéo
+    function startVideoCall() {
+      // Mettez en place les fonctionnalités WebRTC pour l'appel vidéo ici
+      // Vous devrez utiliser navigator.mediaDevices.getUserMedia() pour obtenir l'accès à la caméra
+      // et l'élément HTML video pour afficher le flux vidéo
+
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then((stream) => {
+          const videoElement = document.createElement('video');
+          videoElement.srcObject = stream;
+          videoElement.play();
+          // Ajoutez le flux vidéo à votre interface utilisateur ici
+        })
+        .catch((error) => {
+          console.error('Erreur lors de l\'obtention de l\'accès à la caméra:', error);
+        });
+    }
+
+    // Fonction pour démarrer l'appel audio
+    function startAudioCall() {
+      // Mettez en place les fonctionnalités WebRTC pour l'appel audio ici
+      // Vous devrez utiliser navigator.mediaDevices.getUserMedia() pour obtenir l'accès au microphone
+      // et l'élément HTML audio pour afficher le flux audio
+
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then((stream) => {
+          const audioElement = document.createElement('audio');
+          audioElement.srcObject = stream;
+          audioElement.play();
+          // Ajoutez le flux audio à votre interface utilisateur ici
+        })
+        .catch((error) => {
+          console.error('Erreur lors de l\'obtention de l\'accès au microphone:', error);
+        });
+    }
+</script>
+</body>
+</html>
